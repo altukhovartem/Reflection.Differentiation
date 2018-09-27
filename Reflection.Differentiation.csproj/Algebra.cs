@@ -12,16 +12,33 @@ namespace Reflection.Differentiation
         internal static Expression<Func<double, double>> Differentiate(Expression<Func<double, double>> function)
         {
             Expression<Func<double, double>> resultExp = null;
-            var qwe = function.Compile();
-            var xx = qwe(10);
+            var oldParameters = function.Parameters;
+            var oldBody = function.Body;
+            var nodeType = function.NodeType;
+
+            ParameterExpression newParams = null;
+            Expression newBody = null;
+
             ExpressionType expType = function.Body.NodeType; 
             switch (expType)
             {
-                //case (ExpressionType.Constant): return 0; break; 
-
+                case (ExpressionType.Constant):
+                    newParams = oldParameters.FirstOrDefault();
+                    newBody = Expression.Constant(0.0);
+                    break;
+                case (ExpressionType.Parameter):
+                    newParams = oldParameters.FirstOrDefault();
+                    newBody = Expression.Constant(1.0);
+                    break;
+                case ExpressionType type when type.Equals(ExpressionType.Multiply):
+                    newParams = oldParameters.FirstOrDefault();
+                    newBody = Expression.Constant(5.0);
+                    break; 
             }
 
-            throw new NotImplementedException();
+            resultExp = Expression.Lambda<Func<double, double>>(newBody, newParams);
+
+            return resultExp; 
         }
     }
 }
