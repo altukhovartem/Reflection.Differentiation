@@ -14,13 +14,13 @@ namespace Reflection.Differentiation
         {
             return Expression.Lambda<Func<double, double>>(function.Body.Differentiate(), function.Parameters);
         }
+        private static MethodInfo CosCall = new Func<double, double>(Math.Cos).GetMethodInfo();
+        private static MethodInfo SinCall = new Func<double, double>(Math.Sin).GetMethodInfo();
 
         public static Expression Differentiate(this Expression function)
         {
             Expression newBody = null;
 
-
-            ExpressionType expType = function.NodeType; 
             switch (function)
             {
                 case ConstantExpression _:
@@ -41,12 +41,12 @@ namespace Reflection.Differentiation
                 case BinaryExpression be when (be.NodeType == ExpressionType.Subtract):
                     newBody = be.Right;
                     break;
-                case MethodCallExpression be when (be.NodeType == ExpressionType.Call && be.Method.Name == "Sin"):
-           
-
-
-                    break;
-                case MethodCallExpression be when (be.NodeType == ExpressionType.Call && be.Method.Name == "Cos"):
+                case MethodCallExpression be when (be.NodeType == ExpressionType.Call):
+                    var args = be.Arguments.FirstOrDefault();
+                    if(be.Method.Name == "Sin")
+                        newBody = Expression.Multiply(args.Differentiate(), Expression.Call(CosCall, args));
+                    if(be.Method.Name == "Cos")
+                        newBody = Expression.Multiply(Expression.Constant(-1.0), Expression.Multiply(args.Differentiate(), Expression.Call(SinCall, args)));
                     break;
             }
 
